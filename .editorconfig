@@ -1,0 +1,13 @@
+root = true
+
+[*.{kt,kts}]
+charset = utf-8
+end_of_line = lf
+indent_size = 4
+indent_style = space
+insert_final_newline = true
+max_line_length = 120
+tab_width = 4
+
+# Disable function naming rule for Compose (Composables should start with uppercase)
+ktlint_standard_function-naming = disabled

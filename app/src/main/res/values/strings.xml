@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">Opal Challenge</string>
+    <string name="ok">OK</string>
+    <string name="error_api_generic">An error occurred. Please try again later.</string>
+    <string name="error_api_network">An error occurred. Please check your internet connection.</string>
+    <string name="error_code_label">(error code: %s)</string>
+    <string name="referral_next_unlock">Next Unlock:</string>
+    <string name="referral_new_unlock">New Unlock:</string>
+    <string name="referral_subtitle">30-day Guest Pass</string>
+    <string name="referral_explanation">Give a friend unlimited access to Opal Pro, including unlimited schedules, app limits, deep focus, whitelisting and more!</string>
+    <string name="referred_friends">Referred Friends:</string>
+    <string name="add_friends_button">Add Friends</string>
+    <string name="share_referral_link_button">Share Referral Link</string>
+    <string name="reward_item_list_friend_title_single">1 friend</string>
+    <string name="reward_item_list_friend_title_several">%d friends</string>
+    <string name="claim_button">Claim</string>
+    <string name="claimed_button">Claimed</string>
+    <string name="message_shared">Hey! I found this app that\'s really effective at reducing addictive app usage. You should try it!\nhttps://www.opal.so/fr</string>
+</resources>
