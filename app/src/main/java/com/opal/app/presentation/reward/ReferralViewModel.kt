@@ -8,6 +8,7 @@ import com.opal.app.domain.model.DomainUser
 import com.opal.app.domain.repository.RewardRepository
 import com.opal.app.domain.repository.UserRepository
 import com.opal.app.presentation.BaseViewModel
+import com.opal.app.presentation.reward.CurrentReward.ClaimButtonState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
@@ -24,8 +25,9 @@ class ReferralViewModel(
         userRepository
             .getCurrentUser()
             .combine(rewardRepository.getRewardList()) { user, rewardList ->
-                computeRewardItemList(user, rewardList)
-                computeCurrentReward(user, rewardList)
+                rewardItemList.value = rewardList.toRewardItemList(context, user)
+                //computeCurrentReward(user, rewardList)
+                currentReward.value = rewardList.toCurrentReward(context, user)
             }.handleException()
             .launchIn(viewModelScope)
     }
@@ -76,104 +78,19 @@ class ReferralViewModel(
         }
     }
 
-    private fun computeRewardItemList(
-        user: DomainUser,
-        rewardList: List<DomainReward>,
-    ) {
-        val referredCount = user.referredFriendList.size
-        rewardItemList.value =
-            rewardList
-                .sortedBy { it.referralNumber }
-                .map { reward ->
-                    val progress =
-                        (referredCount.toFloat() / reward.referralNumber).coerceAtMost(1f)
-                    val isUnlocked = referredCount >= reward.referralNumber
-                    RewardItem(
-                        id = reward.id,
-                        friendTitle =
-                            when (reward.referralNumber > 1) {
-                                true ->
-                                    context.getString(
-                                        R.string.reward_item_list_friend_title_several,
-                                        reward.referralNumber,
-                                    )
-                                false -> context.getString(R.string.reward_item_list_friend_title_single)
-                            }.uppercase(),
-                        rewardTitle = reward.title,
-                        subtitle = reward.subtitle,
-                        progress = progress,
-                        claimButtonState =
-                            if (isUnlocked) {
-                                if (reward.claimed) {
-                                    RewardItem.ClaimButtonState.CLAIMED
-                                } else {
-                                    RewardItem.ClaimButtonState.TO_CLAIM
-                                }
-                            } else {
-                                RewardItem.ClaimButtonState.HIDDEN
-                            },
-                        image = reward.image,
-                        isLoading = false,
-                    )
+    fun onCurrentRewardButtonClicked() {
+        viewModelScope.launch {
+            try {
+                // set loading
+                currentReward.value?.let {
+                    currentReward.value = it.copy(claimButtonState = ClaimButtonState.IS_LOADING)
+                    rewardRepository.claimReward(it.id)
                 }
-    }
-
-    private fun computeCurrentReward(
-        user: DomainUser,
-        rewardList: List<DomainReward>,
-    ) {
-        val referredCount = user.referredFriendList.size
-        rewardList
-            .sortedByDescending { it.referralNumber }
-            .forEachIndexed { index, reward ->
-                if (referredCount < reward.referralNumber) {
-                    val hasNextUnlock = index == rewardList.size - 1
-                    currentReward.value =
-                        CurrentReward(
-                            referredCount = referredCount,
-                            friendPictureList = user.referredFriendList.map { it.picture },
-                            rewardImage = reward.image,
-                            unlockLabel =
-                                context.getString(
-                                    when (hasNextUnlock) {
-                                        true -> R.string.referral_next_unlock
-                                        false -> R.string.referral_new_unlock
-                                    },
-                                ),
-                            title = reward.title,
-                            countLabel = "$referredCount/${reward.referralNumber}",
-                            progress = (referredCount.toFloat() / reward.referralNumber).coerceAtMost(1f),
-                            isClaimedButtonShown = reward.claimed.not(),
-                        )
-                }
+            } catch (exception: Exception) {
+                handleException(exception)
+            } finally {
+                currentReward.value = currentReward.value?.copy(claimButtonState = ClaimButtonState.IS_LOADING)
             }
+        }
     }
 }
-
-data class RewardItem(
-    val id: String,
-    val friendTitle: String,
-    val rewardTitle: String,
-    val subtitle: String,
-    val progress: Float,
-    val claimButtonState: ClaimButtonState,
-    val image: String,
-    val isLoading: Boolean,
-) {
-    enum class ClaimButtonState {
-        TO_CLAIM,
-        CLAIMED,
-        HIDDEN,
-    }
-}
-
-data class CurrentReward(
-    val referredCount: Int,
-    val friendPictureList: List<String>,
-    val rewardImage: String,
-    val unlockLabel: String,
-    val title: String,
-    val countLabel: String,
-    val progress: Float,
-    val isClaimedButtonShown: Boolean,
-)

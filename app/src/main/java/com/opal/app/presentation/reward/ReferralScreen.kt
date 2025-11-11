@@ -79,7 +79,7 @@ fun ReferralScreen(viewModel: ReferralViewModel = koinViewModel()) {
                 ExplanationLabel()
                 val currentReward by viewModel.currentReward.collectAsState()
                 currentReward?.let {
-                    CurrentRewardView(it)
+                    CurrentRewardView(it, viewModel)
                 }
                 Buttons(viewModel)
             }
@@ -159,7 +159,10 @@ private fun ExplanationLabel() {
 }
 
 @Composable
-private fun CurrentRewardView(currentReward: CurrentReward) {
+private fun CurrentRewardView(
+    currentReward: CurrentReward,
+    viewModel: ReferralViewModel
+) {
     Column(
         verticalArrangement = Arrangement.spacedBy(16.dp),
         modifier =
@@ -235,14 +238,35 @@ private fun CurrentRewardView(currentReward: CurrentReward) {
                             font = OpalFont.CalloutSemibold,
                         )
                         Spacer(Modifier.weight(1f))
-                        OpalText(
-                            text = currentReward.countLabel,
-                            font = OpalFont.FootNoteSemibold,
-                            color = White60,
-                        )
+
+                        if (currentReward.claimButtonState != CurrentReward.ClaimButtonState.HIDDEN) {
+                            OpalButton(
+                                icon = R.drawable.ic_checkmark,
+                                title =
+                                    if (currentReward.claimButtonState == CurrentReward.ClaimButtonState.TO_CLAIM) {
+                                        stringResource(R.string.claim_button)
+                                    } else {
+                                        stringResource(R.string.claimed_button)
+                                    },
+                                state = OpalButtonState.Secondary,
+                                isEnabled = currentReward.claimButtonState == CurrentReward.ClaimButtonState.TO_CLAIM,
+                                isLoading = currentReward.claimButtonState == CurrentReward.ClaimButtonState.IS_LOADING
+                            ) {
+                                viewModel.onCurrentRewardButtonClicked()
+                            }
+                        }
+                        if (currentReward.countLabel != null) {
+                            OpalText(
+                                text = currentReward.countLabel,
+                                font = OpalFont.FootNoteSemibold,
+                                color = White60,
+                            )
+                        }
                     }
                 }
-                ProgressBar(currentReward.progress)
+                if (currentReward.progress != null) {
+                    ProgressBar(currentReward.progress)
+                }
             }
         }
     }
