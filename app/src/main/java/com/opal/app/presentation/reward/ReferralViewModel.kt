@@ -10,6 +10,7 @@ import com.opal.app.domain.repository.UserRepository
 import com.opal.app.presentation.BaseViewModel
 import com.opal.app.presentation.reward.CurrentReward.ClaimButtonState
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.launch
@@ -26,7 +27,6 @@ class ReferralViewModel(
             .getCurrentUser()
             .combine(rewardRepository.getRewardList()) { user, rewardList ->
                 rewardItemList.value = rewardList.toRewardItemList(context, user)
-                //computeCurrentReward(user, rewardList)
                 currentReward.value = rewardList.toCurrentReward(context, user)
             }.handleException()
             .launchIn(viewModelScope)
